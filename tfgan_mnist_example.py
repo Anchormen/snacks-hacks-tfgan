@@ -149,9 +149,9 @@ with tf.Session() as sess:
                                      newshape=(28, 28, 3))
                     a[j][i2].imshow(img)
 
-        f.show()
-        plt.draw()
-        plt.savefig("mnist_gan_{}.png".format(plotnum))
-        plt.close()
-        plotnum = plotnum + 1
+            f.show()
+            plt.draw()
+            plt.savefig("mnist_gan_{}.png".format(plotnum))
+            plt.close()
+            plotnum = plotnum + 1
     #plt.waitforbuttonpress()
