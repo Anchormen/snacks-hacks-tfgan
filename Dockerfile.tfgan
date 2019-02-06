@@ -1,0 +1,4 @@
+FROM tensorflow/tensorflow
+
+WORKDIR /opt/anchormen
+
