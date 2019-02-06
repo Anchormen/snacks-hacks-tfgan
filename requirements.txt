@@ -2,4 +2,5 @@ tensorboard
 tensorflow
 tqdm
 requests
+pandas
 matplotlib
