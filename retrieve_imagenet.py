@@ -89,13 +89,13 @@ if not os.path.exists(imgfolder):
 
 print("Downloading images...")
 
-for id, url in tqdm(wnidurls.itertuples(index=False), total=len(wnidurls), unit='images') :
+for id, url in tqdm(wnidurls.itertuples(index=False), total=len(wnidurls), unit='image') :
     target = os.path.join(imgfolder, "{}.jpg".format(id))
     if not os.path.isfile(target) :
         #print("Downloading {}.jpg from {}".format(id, url))
 
         try :
-            response = requests.get(url, stream=True)
+            response = requests.get(url, stream=True, timeout=2)
             total_size = int(response.headers.get('content-length', 0))
             block_size = 1024
             with open(target, "wb") as handle:
