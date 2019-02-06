@@ -1,3 +1,5 @@
+# Author: r.dotsch@anchormen.nl
+
 from tqdm import tqdm
 import requests
 import tarfile
@@ -105,6 +107,9 @@ for id, url in tqdm(wnidurls.itertuples(index=False), total=len(wnidurls), unit=
             pass
 
         except requests.exceptions.ReadTimeout:
+            pass
+
+        except requests.exceptions.TooManyRedirects:
             pass
 
 # Clean up bad images
