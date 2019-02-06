@@ -102,7 +102,9 @@ for id, url in tqdm(wnidurls.itertuples(index=False), total=len(wnidurls), unit=
                 for data in tqdm(response.iter_content(block_size), total = total_size // block_size, unit ='KB'):
                     handle.write(data)
         except requests.exceptions.ConnectionError:
-            #print("Connection refused.")
+            pass
+
+        except requests.exceptions.ReadTimeout:
             pass
 
 # Clean up bad images
