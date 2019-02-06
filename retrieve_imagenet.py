@@ -2,6 +2,7 @@ from tqdm import tqdm
 import requests
 import tarfile
 import os
+import codecs
 
 # Retrieve imagenet - wordnet mapping
 
@@ -44,7 +45,7 @@ while not wnid :
 print("WordNetID found: {}".format(wnid))
 
 # Retrieve and untar imagenet urls
-if not os.path.isfile('fall11_ urls.txt') :
+if not os.path.isfile('fall11_urls.txt') :
 
     url = 'http://image-net.org/imagenet_data/urls/imagenet_fall11_urls.tgz'
     tarname= "imagenet_fall11_urls.tar"
@@ -72,9 +73,10 @@ if not os.path.isfile('fall11_ urls.txt') :
         tar.close()
 
 # Retrieve all imagenet urls for category of interest
-with open('fall11_urls.txt') as urls :
-    allurls = [line.split('\t') for line in urls]
-    wnidurls = {id:url for id, url in allurls if wnid in id}
+print("Looking for all imagenet urls that contain selected WordNetID...")
+with codecs.open('fall11_urls.txt', "r",encoding='utf-8', errors='ignore') as urls:
+    allurls = [line.split('\t') for line in tqdm(urls, unit='urls')]
+    wnidurls = {id:url for id, url in tqdm(allurls, total=len(allurls)) if wnid in id}
     print ("{} images found for selected WordNetID".format(len(wnidurls)))
 
 # Retrieve all images
