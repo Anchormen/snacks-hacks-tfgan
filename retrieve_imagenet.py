@@ -36,7 +36,7 @@ finally :
 wnid = None
 while not wnid :
 
-    cat_of_interest = input("Enter WordNet category of interest to restrict image download (see {} for all available categories): ".format(mappingname))
+    cat_of_interest = input("Enter WordNet category of interest to restrict image download (see http://image-net.org/search): ")
 
     try :
         wnid = mappings[cat_of_interest.lower()]
