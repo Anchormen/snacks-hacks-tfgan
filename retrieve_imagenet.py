@@ -82,22 +82,32 @@ wnidurls = urls[urls['id'].str.contains(wnid)]
 print ("{} images found for selected WordNetID".format(len(wnidurls)))
 
 # Retrieve all images
+
 imgfolder = 'imagenet'
 if not os.path.exists(imgfolder):
     os.makedirs(imgfolder)
 
-for id, url in wnidurls.itertuples(index=False) :
-    print("Downloading {}.jpg from {}".format(id, url))
+print("Downloading images...")
 
-    try :
-        response = requests.get(url, stream=True)
-        total_size = int(response.headers.get('content-length', 0))
-        block_size = 1024
-        with open(os.path.join(imgfolder, "{}.jpg".format(id)), "wb") as handle:
-            for data in tqdm(response.iter_content(block_size), total = total_size // block_size, unit ='KB'):
-                handle.write(data)
-    except :
-        print("Connection refused.")
-        
-print("Done.")
+for id, url in tqdm(wnidurls.itertuples(index=False), total=len(wnidurls), unit='images') :
+    target = os.path.join(imgfolder, "{}.jpg".format(id))
+    if not os.path.isfile(target) :
+        #print("Downloading {}.jpg from {}".format(id, url))
+
+        try :
+            response = requests.get(url, stream=True)
+            total_size = int(response.headers.get('content-length', 0))
+            block_size = 1024
+            with open(target, "wb") as handle:
+                for data in tqdm(response.iter_content(block_size), total = total_size // block_size, unit ='KB'):
+                    handle.write(data)
+        except :
+            #print("Connection refused.")
+            pass
+
+# Clean up bad images
+
 # Normalize all images
+
+
+print("Done.")
