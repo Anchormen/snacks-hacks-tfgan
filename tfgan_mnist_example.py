@@ -113,6 +113,7 @@ train_disc = optimizer_disc.minimize(disc_loss, var_list=disc_vars)
 # Initialize the variables (i.e. assign their default value)
 init = tf.global_variables_initializer()
 
+plotnum = 0
 # Start training
 with tf.Session() as sess:
 
@@ -150,5 +151,6 @@ with tf.Session() as sess:
 
     f.show()
     plt.draw()
-    plt.savefig()
+    plt.savefig("mnist_gan_{}.png".format(plotnum))
+    plotnum = plotnum + 1
     #plt.waitforbuttonpress()
