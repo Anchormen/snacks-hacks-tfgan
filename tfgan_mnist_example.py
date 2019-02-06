@@ -152,5 +152,6 @@ with tf.Session() as sess:
         f.show()
         plt.draw()
         plt.savefig("mnist_gan_{}.png".format(plotnum))
+        plt.close()
         plotnum = plotnum + 1
     #plt.waitforbuttonpress()
