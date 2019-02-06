@@ -134,20 +134,20 @@ with tf.Session() as sess:
         if i % 1000 == 0 or i == 1:
             print('Step %i: Generator Loss: %f, Discriminator Loss: %f' % (i, gl, dl))
 
-        # Generate images from noise, using the generator network.
-        f, a = plt.subplots(4, 10, figsize=(10, 4))
-        for i2 in range(10):
-            # Noise input.
-            z = np.random.uniform(-1., 1., size=[4, noise_dim])
-            g = sess.run([gen_sample], feed_dict={gen_input: z})
-            g = np.reshape(g, newshape=(4, 28, 28, 1))
-            # Reverse colours for better display
-            g = -1 * (g - 1)
-            for j in range(4):
-                # Generate image from noise. Extend to 3 channels for matplot figure.
-                img = np.reshape(np.repeat(g[j][:, :, np.newaxis], 3, axis=2),
-                                 newshape=(28, 28, 3))
-                a[j][i2].imshow(img)
+            # Generate images from noise, using the generator network.
+            f, a = plt.subplots(4, 10, figsize=(10, 4))
+            for i2 in range(10):
+                # Noise input.
+                z = np.random.uniform(-1., 1., size=[4, noise_dim])
+                g = sess.run([gen_sample], feed_dict={gen_input: z})
+                g = np.reshape(g, newshape=(4, 28, 28, 1))
+                # Reverse colours for better display
+                g = -1 * (g - 1)
+                for j in range(4):
+                    # Generate image from noise. Extend to 3 channels for matplot figure.
+                    img = np.reshape(np.repeat(g[j][:, :, np.newaxis], 3, axis=2),
+                                     newshape=(28, 28, 3))
+                    a[j][i2].imshow(img)
 
         f.show()
         plt.draw()
