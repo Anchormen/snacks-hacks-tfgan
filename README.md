@@ -2,7 +2,7 @@
 
 Create a virtual env with the requirements:
 
-`mkvirtualenv –p /usr/bin/python3 –r requirements.txt snacks-hacks-tfgan`
+`mkvirtualenv –p /usr/bin/python3.5 –r requirements.txt snacks-hacks-tfgan`
 
 OR run the TensorFlow image (remove “-py3”if you’re old-fashioned):
 
