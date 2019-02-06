@@ -3,6 +3,7 @@ import requests
 import tarfile
 import os
 import codecs
+import pandas as pd
 
 # Retrieve imagenet - wordnet mapping
 
@@ -73,25 +74,30 @@ if not os.path.isfile('fall11_urls.txt') :
         tar.close()
 
 # Retrieve all imagenet urls for category of interest
-print("Looking for all imagenet urls that contain selected WordNetID...")
-with codecs.open('fall11_urls.txt', "r",encoding='utf-8', errors='ignore') as urls:
-    allurls = [line.split('\t') for line in tqdm(urls, unit='urls')]
-    wnidurls = {id:url for id, url in tqdm(allurls, total=len(allurls)) if wnid in id}
-    print ("{} images found for selected WordNetID".format(len(wnidurls)))
+print("Looking for all imagenet urls that belong to WordNetID...")
+urls = pd.read_csv('fall11_urls.txt', sep='\t',  warn_bad_lines=False, error_bad_lines=False, encoding="ISO-8859-1")
+urls.columns = ['id', 'url'] # Dirty hack, losing first line because of this
+wnidurls = urls[urls['id'].str.contains(wnid)]
+
+print ("{} images found for selected WordNetID".format(len(wnidurls)))
 
 # Retrieve all images
 imgfolder = 'imagenet'
 if not os.path.exists(imgfolder):
     os.makedirs(imgfolder)
 
-for id, url in wnidurls :
+for id, url in wnidurls.itertuples(index=False) :
     print("Downloading {}.jpg from {}".format(id, url))
 
-    response = requests.get(url, stream=True)
-    total_size = int(response.headers.get('content-length', 0))
-    block_size = 1024
-    with open(os.path.join(imgfolder, id, ".jpg"), "wb") as handle:
-        for data in tqdm(response.iter_content(block_size), total = total_size // block_size, unit ='KB'):
-            handle.write(data)
-
+    try :
+        response = requests.get(url, stream=True)
+        total_size = int(response.headers.get('content-length', 0))
+        block_size = 1024
+        with open(os.path.join(imgfolder, "{}.jpg".format(id)), "wb") as handle:
+            for data in tqdm(response.iter_content(block_size), total = total_size // block_size, unit ='KB'):
+                handle.write(data)
+    except :
+        print("Connection refused.")
+        
+print("Done.")
 # Normalize all images
