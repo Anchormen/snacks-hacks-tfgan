@@ -58,7 +58,7 @@ def main(_):
                 'train', FLAGS.batch_size, FLAGS.dataset_dir, num_threads=4)
 
     generator_fn=networks.unconditional_generator
-    noise_fn = f.random_normal(
+    noise_fn = tf.random_normal(
         [FLAGS.batch_size, FLAGS.noise_dims])
     gan_model = tfgan.gan_model(
         generator_fn=generator_fn,
@@ -99,11 +99,14 @@ def main(_):
     if FLAGS.max_number_of_steps == 0:
         return
 
-    gan_plotter_hook = PlotGanImageHook(generator_fn, noise_fn, os.path.join("tmp", "gan_output"))
+    gan_plotter_hook = PlotGanImageHook(
+        gan_model=gan_model,
+        path=os.path.join(os.sep, "tmp", "gan_output"),
+        every_n_iter=1000)
     tfgan.gan_train(
         train_ops,
         hooks=[gan_plotter_hook, tf.train.StopAtStepHook(num_steps=FLAGS.max_number_of_steps),
-               tf.train.LoggingTensorHook([status_message], every_n_iter=10)],
+               tf.train.LoggingTensorHook([status_message], every_n_iter=100)],
         logdir=FLAGS.train_log_dir,
         get_hooks_fn=tfgan.get_joint_train_hooks())
 
