@@ -34,7 +34,11 @@ class PokeDatabase(object):
         self.db_size = len(all_image_paths)
         for n in range(3):
             img_path = random.choice(all_image_paths)
-            img_arr = np.array(self.load_and_preprocess_image(img_path))
+            print(img_path)
+            img = self.load_and_preprocess_image(img_path)
+            print(img)
+            img_arr = np.array(img)
+            print(img_arr)
             img_arr = np.squeeze(img_arr)
             plt.imshow(img_arr)
             plt.show()
