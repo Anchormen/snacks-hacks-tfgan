@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-class PokeDataSet:
+class PokeDataset:
 
     def __init__(self, shape=None):
         self.images = []
@@ -41,17 +41,6 @@ class PokeDataSet:
         self.images = [self._process_image(
             cv2.imread(pic), self.pic_shape) for pic in self.pic_paths
         ]
-
-        # for pic in os.listdir(self.pic_dir):
-        #     img = cv2.imread("{}/{}".format(self.pic_dir, pic))
-        #     img = img[:, :, 0] / 255.0
-        #     img = cv2.resize(
-        #         img, dsize=self.pic_shape, interpolation=cv2.INTER_LINEAR
-        #     )
-        #     img = np.ravel(img)
-        #     print(img)
-        #     self.images.append(img)
-
         self.images = np.asarray(self.images)
         self.num_images = len(self.images)
 
@@ -77,7 +66,7 @@ if __name__ == "__main__":
             plt.show()
             b = poke_obj.get_next_poke_batch(50)
 
-    poke_db = PokeDataSet(shape=(32, 32))
+    poke_db = PokeDataset(shape=(32, 32))
     # test_images_attribute(poke_db)
     test_get_pics(poke_db)
     # test_get_batch(poke_db)
