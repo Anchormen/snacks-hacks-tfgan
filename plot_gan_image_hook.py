@@ -14,7 +14,8 @@ class PlotGanImageHook(tf.train.SessionRunHook):
     Plots outputs of the generator, can be used to visualize training progress
     """
 
-    def __init__(self, gan_model, path, every_n_iter, name_format="gan_image_plot_{}.png"):
+    def __init__(self, gan_model, path, every_n_iter, batch_size, name_format="gan_image_plot_{}.png"):
+        self._batch_size = batch_size
         self._gan_model = gan_model
         self._path = path
         self._format = name_format
@@ -22,7 +23,7 @@ class PlotGanImageHook(tf.train.SessionRunHook):
 
         self._iter_count = 0
 
-    def after_run(self, run_context, run_values):
+    def after_run(self, run_context, _):
         self._iter_count += 1
         if self._iter_count % self._every_n_iter != 0:
             return
@@ -32,8 +33,7 @@ class PlotGanImageHook(tf.train.SessionRunHook):
             # Generate images from noise, using the generator network.
             f, a = plt.subplots(1, 10, figsize=(10, 4))
             gen_output = session.run([self._gan_model.generated_data])
-            BATCH_SIZE = 32
-            gen_output = np.reshape(gen_output, (BATCH_SIZE, 28, 28))
+            gen_output = np.reshape(gen_output, (self._batch_size, 28, 28))
 
             # Rescale to [0, 1.0] and invert colors
             gen_output = 1.0 - (gen_output + 1.0) / 2.0
