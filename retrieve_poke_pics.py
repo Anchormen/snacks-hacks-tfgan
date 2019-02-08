@@ -22,7 +22,7 @@ class PokeDataset:
 
     def get_next_poke_batch(self, batch_size=1):
         idx_stop = self.batch_idx + batch_size
-        print(idx_stop, self.num_images)
+        # print(idx_stop, self.num_images)
         res = self.images[self.batch_idx:idx_stop]
         self.batch_idx = self.batch_idx + batch_size
         return res

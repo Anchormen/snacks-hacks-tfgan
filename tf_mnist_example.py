@@ -37,8 +37,8 @@ learning_rate = 0.0002
 pic_shape = (32, 32)
 pix_x, pix_y = pic_shape
 image_dim = pix_x*pix_y # 28*28 pixels
-gen_hidden_dim = 256
-disc_hidden_dim = 256
+gen_hidden_dim = 512
+disc_hidden_dim = 512
 noise_dim = 100 # Noise data points
 
 # Import pokemon dataset from local directory
@@ -133,6 +133,7 @@ with tf.Session() as sess:
         # Get the next batch of MNIST data (only images are needed, not labels)
         # batch_x, _ = mnist.train.next_batch(batch_size)
         batch_x = poke_db.get_poke_pics()
+        # batch_x = poke_db.get_next_poke_batch(batch_size)
         # Generate noise to feed to the generator
         # z = np.random.uniform(-1., 1., size=[batch_size, noise_dim])
         z = np.random.uniform(-1., 1., size=[poke_db.num_images, noise_dim])
