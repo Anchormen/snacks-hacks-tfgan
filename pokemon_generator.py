@@ -2,15 +2,15 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import time
+import os
 
 from absl import flags
 from absl import logging
 import tensorflow as tf
 tfgan = tf.contrib.gan
 from tf_gan_research_deps import networks, data_provider
-import matplotlib.pyplot as plt
-import numpy as np
+from plot_gan_image_hook import PlotGanImageHook
+
 
 
 flags.DEFINE_integer('batch_size', 32, 'The number of images in each batch.')
@@ -57,12 +57,14 @@ def main(_):
             images, one_hot_labels, _ = data_provider.provide_data(
                 'train', FLAGS.batch_size, FLAGS.dataset_dir, num_threads=4)
 
+    generator_fn=networks.unconditional_generator
+    noise_fn = f.random_normal(
+        [FLAGS.batch_size, FLAGS.noise_dims])
     gan_model = tfgan.gan_model(
-        generator_fn=networks.unconditional_generator,
+        generator_fn=generator_fn,
         discriminator_fn=networks.unconditional_discriminator,
         real_data=images,
-        generator_inputs=tf.random_normal(
-            [FLAGS.batch_size, FLAGS.noise_dims]))
+        generator_inputs=noise_fn)
 
     tfgan.eval.add_gan_model_image_summaries(gan_model, FLAGS.grid_size)
 
@@ -97,34 +99,13 @@ def main(_):
     if FLAGS.max_number_of_steps == 0:
         return
 
+    gan_plotter_hook = PlotGanImageHook(generator_fn, noise_fn, os.path.join("tmp", "gan_output"))
     tfgan.gan_train(
         train_ops,
-        hooks=[tf.train.StopAtStepHook(num_steps=FLAGS.max_number_of_steps),
+        hooks=[gan_plotter_hook, tf.train.StopAtStepHook(num_steps=FLAGS.max_number_of_steps),
                tf.train.LoggingTensorHook([status_message], every_n_iter=10)],
         logdir=FLAGS.train_log_dir,
         get_hooks_fn=tfgan.get_joint_train_hooks())
-
-
-def plot_generator(sess):
-    # Generate images from noise, using the generator network.
-    f, a = plt.subplots(4, 10, figsize=(10, 4))
-    for i2 in range(10):
-        # Noise input.
-        z = np.random.uniform(-1., 1., size=[4, FLAGS.noise_dims])
-        g = sess.run(networks.unconditional_generator(tf.random_normal([FLAGS.batch_size, FLAGS.noise_dims])))
-        g = np.reshape(g, newshape=(4, 28, 28, 1))
-        # Reverse colours for better display
-        g = -1 * (g - 1)
-        for j in range(4):
-            # Generate image from noise. Extend to 3 channels for matplot figure.
-            img = np.reshape(np.repeat(g[j][:, :, np.newaxis], 3, axis=2),
-                             newshape=(28, 28, 3))
-            a[j][i2].imshow(img)
-
-    f.show()
-    plt.draw()
-    plt.savefig("mnist_gan_{}.png".format(time.time()))
-    plt.close()
 
 
 if __name__ == '__main__':
