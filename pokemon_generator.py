@@ -8,9 +8,9 @@ from absl import flags
 from absl import logging
 import tensorflow as tf
 tfgan = tf.contrib.gan
+layers = tf.contrib.layers
 from tf_gan_research_deps import networks, data_provider
 from plot_gan_image_hook import PlotGanImageHook
-
 
 
 flags.DEFINE_integer('batch_size', 32, 'The number of images in each batch.')
@@ -36,6 +36,61 @@ flags.DEFINE_integer(
 
 FLAGS = flags.FLAGS
 
+
+def _generator_helper(
+        noise, is_conditional, one_hot_labels, weight_decay, is_training):
+    """Core MNIST generator.
+
+    This function is reused between the different GAN modes (unconditional,
+    conditional, etc).
+
+    Args:
+      noise: A 2D Tensor of shape [batch size, noise dim].
+      is_conditional: Whether to condition on labels.
+      one_hot_labels: Optional labels for conditioning.
+      weight_decay: The value of the l2 weight decay.
+      is_training: If `True`, batch norm uses batch statistics. If `False`, batch
+        norm uses the exponential moving average collected from population
+        statistics.
+
+    Returns:
+      A generated image in the range [-1, 1].
+    """
+    with tf.contrib.framework.arg_scope(
+            [layers.fully_connected, layers.conv2d_transpose],
+            activation_fn=tf.nn.relu, normalizer_fn=layers.batch_norm,
+            weights_regularizer=layers.l2_regularizer(weight_decay)):
+        with tf.contrib.framework.arg_scope(
+                [layers.batch_norm], is_training=is_training):
+            net = layers.fully_connected(noise, 1024)
+            if is_conditional:
+                net = tfgan.features.condition_tensor_from_onehot(net, one_hot_labels)
+            net = layers.fully_connected(net, 7 * 7 * 128)
+            net = tf.reshape(net, [-1, 7, 7, 128])
+            net = layers.conv2d_transpose(net, 64, [4, 4], stride=2)
+            net = layers.conv2d_transpose(net, 32, [4, 4], stride=2)
+            # Make sure that generator output is in the same range as `inputs`
+            # ie [-1, 1].
+            net = layers.conv2d(
+                net, 1, [4, 4], normalizer_fn=None, activation_fn=tf.tanh)
+
+            return net
+
+
+def unconditional_generator(noise, weight_decay=2.5e-5, is_training=True):
+    """Generator to produce unconditional MNIST images.
+
+    Args:
+      noise: A single Tensor representing noise.
+      weight_decay: The value of the l2 weight decay.
+      is_training: If `True`, batch norm uses batch statistics. If `False`, batch
+        norm uses the exponential moving average collected from population
+        statistics.
+
+    Returns:
+      A generated image in the range [-1, 1].
+    """
+    return _generator_helper(noise, False, None, weight_decay, is_training)
 
 def _learning_rate(gan_type):
     # First is generator learning rate, second is discriminator learning rate.
@@ -102,7 +157,10 @@ def main(_):
     gan_plotter_hook = PlotGanImageHook(
         gan_model=gan_model,
         path=os.path.join(os.sep, "tmp", "gan_output"),
-        every_n_iter=1000)
+        every_n_iter=1000,
+        batch_size=FLAGS.batch_size
+    )
+
     tfgan.gan_train(
         train_ops,
         hooks=[gan_plotter_hook, tf.train.StopAtStepHook(num_steps=FLAGS.max_number_of_steps),
