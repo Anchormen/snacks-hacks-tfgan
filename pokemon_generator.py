@@ -9,7 +9,7 @@ from absl import logging
 import tensorflow as tf
 tfgan = tf.contrib.gan
 layers = tf.contrib.layers
-from tf_gan_research_deps import networks, data_provider
+from tf_gan_research_deps import  data_provider
 from plot_gan_image_hook import PlotGanImageHook
 
 
@@ -36,6 +36,7 @@ flags.DEFINE_integer(
 
 FLAGS = flags.FLAGS
 
+_leaky_relu = lambda x: tf.nn.leaky_relu(x, alpha=0.01)
 
 def _generator_helper(
         noise, is_conditional, one_hot_labels, weight_decay, is_training):
@@ -157,7 +158,7 @@ def main(_):
             images, one_hot_labels, _ = data_provider.provide_data(
                 'train', FLAGS.batch_size, FLAGS.dataset_dir, num_threads=4)
 
-    generator_fn=networks.unconditional_generator
+    generator_fn=unconditional_generator
     noise_fn = tf.random_normal(
         [FLAGS.batch_size, FLAGS.noise_dims])
     gan_model = tfgan.gan_model(
