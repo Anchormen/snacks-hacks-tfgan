@@ -18,7 +18,7 @@ flags.DEFINE_integer('batch_size', 32, 'The number of images in each batch.')
 flags.DEFINE_string('train_log_dir', '/tmp/pokemon/',
                     'Directory where to write event logs.')
 
-flags.DEFINE_string('dataset_dir', '/tmp/pokemon_data', 'Location of data.')
+flags.DEFINE_string('dataset_dir', '/tmp/mnist_data', 'Location of data.')
 
 flags.DEFINE_integer('max_number_of_steps', 20000,
                      'The maximum number of gradient steps.')
@@ -200,12 +200,8 @@ def main(_):
     if FLAGS.max_number_of_steps == 0:
         return
 
-    gan_plotter_hook = PlotGanImageHook(
-        gan_model=gan_model,
-        path=os.path.join(os.sep, "tmp", "gan_output"),
-        every_n_iter=1000,
-        batch_size=FLAGS.batch_size
-    )
+    gan_plotter_hook = PlotGanImageHook(gan_model=gan_model, path=os.path.join(os.sep, "tmp", "gan_output"),
+                                        every_n_iter=100, batch_size=FLAGS.batch_size)
 
     tfgan.gan_train(
         train_ops,

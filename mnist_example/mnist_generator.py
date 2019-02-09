@@ -99,10 +99,8 @@ def main(_):
     if FLAGS.max_number_of_steps == 0:
         return
 
-    gan_plotter_hook = PlotGanImageHook(
-        gan_model=gan_model,
-        path=os.path.join(os.sep, "tmp", "gan_output"),
-        every_n_iter=1000)
+    gan_plotter_hook = PlotGanImageHook(gan_model=gan_model, path=os.path.join(os.sep, "tmp", "gan_output"),
+                                        every_n_iter=100, batch_size=FLAGS.batch_size)
     tfgan.gan_train(
         train_ops,
         hooks=[gan_plotter_hook, tf.train.StopAtStepHook(num_steps=FLAGS.max_number_of_steps),
