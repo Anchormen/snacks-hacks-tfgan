@@ -15,10 +15,10 @@ from plot_gan_image_hook import PlotGanImageHook
 
 flags.DEFINE_integer('batch_size', 32, 'The number of images in each batch.')
 
-flags.DEFINE_string('train_log_dir', '/tmp/mnist/',
+flags.DEFINE_string('train_log_dir', '/tmp/pokemon/',
                     'Directory where to write event logs.')
 
-flags.DEFINE_string('dataset_dir', '/tmp/mnist_data', 'Location of data.')
+flags.DEFINE_string('dataset_dir', '/tmp/pokemon_data', 'Location of data.')
 
 flags.DEFINE_integer('max_number_of_steps', 20000,
                      'The maximum number of gradient steps.')
@@ -92,12 +92,57 @@ def unconditional_generator(noise, weight_decay=2.5e-5, is_training=True):
     """
     return _generator_helper(noise, False, None, weight_decay, is_training)
 
+def _discriminator_helper(img, is_conditional, one_hot_labels, weight_decay):
+    """Core MNIST discriminator.
+
+    This function is reused between the different GAN modes (unconditional,
+    conditional, etc).
+
+    Args:
+      img: Real or generated MNIST digits. Should be in the range [-1, 1].
+      is_conditional: Whether to condition on labels.
+      one_hot_labels: Labels to optionally condition the network on.
+      weight_decay: The L2 weight decay.
+
+    Returns:
+      Final fully connected discriminator layer. [batch_size, 1024].
+    """
+    with tf.contrib.framework.arg_scope(
+            [layers.conv2d, layers.fully_connected],
+            activation_fn=_leaky_relu, normalizer_fn=None,
+            weights_regularizer=layers.l2_regularizer(weight_decay),
+            biases_regularizer=layers.l2_regularizer(weight_decay)):
+        net = layers.conv2d(img, 64, [4, 4], stride=2)
+        net = layers.conv2d(net, 128, [4, 4], stride=2)
+        net = layers.flatten(net)
+        if is_conditional:
+            net = tfgan.features.condition_tensor_from_onehot(net, one_hot_labels)
+        net = layers.fully_connected(net, 1024, normalizer_fn=layers.layer_norm)
+
+        return net
+
+
+def unconditional_discriminator(img, unused_conditioning, weight_decay=2.5e-5):
+    """Discriminator network on unconditional MNIST digits.
+
+    Args:
+      img: Real or generated MNIST digits. Should be in the range [-1, 1].
+      unused_conditioning: The TFGAN API can help with conditional GANs, which
+        would require extra `condition` information to both the generator and the
+        discriminator. Since this example is not conditional, we do not use this
+        argument.
+      weight_decay: The L2 weight decay.
+
+    Returns:
+      Logits for the probability that the image is real.
+    """
+    net = _discriminator_helper(img, False, None, weight_decay)
+    return layers.linear(net, 1)
+
 def _learning_rate(gan_type):
     # First is generator learning rate, second is discriminator learning rate.
     return {
         'unconditional': (1e-3, 1e-4),
-        'conditional': (1e-5, 1e-4),
-        'infogan': (0.001, 9e-5),
     }[gan_type]
 
 
@@ -117,7 +162,7 @@ def main(_):
         [FLAGS.batch_size, FLAGS.noise_dims])
     gan_model = tfgan.gan_model(
         generator_fn=generator_fn,
-        discriminator_fn=networks.unconditional_discriminator,
+        discriminator_fn=unconditional_discriminator,
         real_data=images,
         generator_inputs=noise_fn)
 
