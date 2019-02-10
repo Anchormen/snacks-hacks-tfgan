@@ -160,4 +160,5 @@ with tf.Session() as sess:
             plt.savefig("generated_pics/poke_gan_{}.png".format(plotnum))
             plt.close()
             plotnum = plotnum + 1
+
     #plt.waitforbuttonpress()
