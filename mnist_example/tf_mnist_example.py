@@ -21,12 +21,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from retrieve_poke_pics import PokeDataset
-
 
 # Import MNIST data
-# from tensorflow.examples.tutorials.mnist import input_data
-# mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
+from tensorflow.examples.tutorials.mnist import input_data
+mnist = input_data.read_data_sets("/tmp/data/", one_hot=True)
 
 # Training Params
 num_steps = 100000
@@ -40,9 +38,6 @@ image_dim = pix_x*pix_y # 28*28 pixels
 gen_hidden_dim = 512
 disc_hidden_dim = 512
 noise_dim = 100 # Noise data points
-
-# Import pokemon dataset from local directory
-poke_db = PokeDataset(shape=pic_shape)
 
 # A custom initialization (see Xavier Glorot init)
 def glorot_init(shape):
@@ -131,12 +126,10 @@ with tf.Session() as sess:
     for i in range(1, num_steps+1):
         # Prepare Data
         # Get the next batch of MNIST data (only images are needed, not labels)
-        # batch_x, _ = mnist.train.next_batch(batch_size)
-        batch_x = poke_db.get_poke_pics()
-        # batch_x = poke_db.get_next_poke_batch(batch_size)
+        batch_x, _ = mnist.train.next_batch(batch_size)
+
         # Generate noise to feed to the generator
-        # z = np.random.uniform(-1., 1., size=[batch_size, noise_dim])
-        z = np.random.uniform(-1., 1., size=[poke_db.num_images, noise_dim])
+        z = np.random.uniform(-1., 1., size=[batch_size, noise_dim])
 
         # Train
         feed_dict = {disc_input: batch_x, gen_input: z}
