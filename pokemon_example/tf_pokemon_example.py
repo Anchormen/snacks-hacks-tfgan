@@ -34,7 +34,7 @@ pix_x, pix_y = pic_shape
 image_dim = pix_x*pix_y
 gen_hidden_dim = 512
 disc_hidden_dim = 512
-noise_dim = 100 # Noise data points
+noise_dim = 100  # Noise data points
 
 # Import pokemon dataset from local directory
 poke_db = PokeDataset(shape=pic_shape)
