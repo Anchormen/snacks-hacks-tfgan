@@ -37,7 +37,7 @@ def _leaky_relu(x):
 
 
 def unconditional_generator(noise, weight_decay=2.5e-5, is_training=True):
-    """Generator to produce unconditional MNIST images.
+    """Generator to produce unconditional Pokemon images. Inspired by the generator in tensorflow.models.research.gan.mnist.networks
 
     Args:
       noise: A single Tensor representing noise.
@@ -70,10 +70,10 @@ def unconditional_generator(noise, weight_decay=2.5e-5, is_training=True):
 
 
 def unconditional_discriminator(img, weight_decay=2.5e-5):
-    """Discriminator network on unconditional MNIST digits.
+    """Discriminator network on unconditional Pokemon digits. Inspired by the generator in tensorflow.models.research.gan.mnist.networks
 
     Args:
-      img: Real or generated MNIST digits. Should be in the range [-1, 1].
+      img: Real or generated Pokemon. Should be in the range [-1, 1].
       unused_conditioning: The TFGAN API can help with conditional GANs, which
         would require extra `condition` information to both the generator and the
         discriminator. Since this example is not conditional, we do not use this
@@ -157,7 +157,7 @@ def main(_):
         return
 
     gan_plotter_hook = PlotGanImageHook(gan_model=gan_model, path=os.path.join(os.sep, "tmp", "gan_output"),
-                                        every_n_iter=100, batch_size=FLAGS.batch_size)
+                                        every_n_iter=100, batch_size=FLAGS.batch_size, image_size=(32, 32, 4))
 
     tfgan.gan_train(
         train_ops,
