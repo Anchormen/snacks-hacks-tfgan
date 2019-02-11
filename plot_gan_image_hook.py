@@ -24,6 +24,8 @@ class PlotGanImageHook(tf.train.SessionRunHook):
         self._every_n_iter = every_n_iter
 
         self._iter_count = 0
+        if not tf.gfile.Exists(self._path):
+            tf.gfile.MakeDirs(self._path)
 
     def after_run(self, run_context, _):
         self._iter_count += 1
@@ -36,16 +38,19 @@ class PlotGanImageHook(tf.train.SessionRunHook):
             f, a = plt.subplots(1, 10, figsize=(10, 4))  # TODO make this configurable
             gen_output = session.run([self._gan_model.generated_data])
             gen_output = np.reshape(gen_output,
-                                    (self._batch_size, self._image_size[0], self._image_size[1], self._image_size[2]))
+                                    (self._batch_size, self._image_size[0], self._image_size[1], -1))
 
             # Rescale to [0, 1.0] and invert colors
             gen_output = 1.0 - (gen_output + 1.0) / 2.0
 
             for i in range(10):
-                img = gen_output[i, :, np.newaxis]
+                img = gen_output[i]
                 if self._image_size[2] == 1:
                     # Extend grayscale to 3 channels for matplot figure
                     img = np.reshape(np.repeat(img, 3, axis=2), newshape=(self._image_size[0], self._image_size[1], 3))
+                elif self._image_size[2] == 4:
+                    # Remove transparency layer in case of RGBA
+                    img = img[:, :, 0:3]
                 a[i].imshow(img)
 
             f.show()
