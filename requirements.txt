@@ -4,3 +4,6 @@ tqdm
 requests
 pandas
 matplotlib
+opencv-python
+ipython
+numpy
