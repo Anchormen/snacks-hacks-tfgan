@@ -27,13 +27,14 @@ flags.DEFINE_integer(
     'grid_size', 5, 'Grid size for image visualization.')
 
 flags.DEFINE_integer(
-    'noise_dims', 64, 'Dimensions of the generator noise vector.')
+    'noise_dims', 128, 'Dimensions of the generator noise vector.')
 
 FLAGS = flags.FLAGS
 
 
 def _leaky_relu(x):
     return tf.nn.leaky_relu(x, alpha=0.01)
+
 
 def unconditional_generator(noise, weight_decay=2.5e-5, is_training=True):
     """Generator to produce unconditional MNIST images.
