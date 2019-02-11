@@ -14,9 +14,7 @@ class PlotGanImageHook(tf.train.SessionRunHook):
     Plots outputs of the generator, can be used to visualize training progress
     """
 
-    def __init__(self, gan_model, path, every_n_iter, batch_size, name_format="gan_image_plot_{}.png",
-                 image_size=(28, 28, 1)):
-        self._image_size = image_size
+    def __init__(self, gan_model, path, every_n_iter, batch_size, name_format="gan_image_plot_{}.png"):
         self._batch_size = batch_size
         self._gan_model = gan_model
         self._path = path
@@ -42,9 +40,10 @@ class PlotGanImageHook(tf.train.SessionRunHook):
 
             for i in range(10):
                 img = gen_output[i, :, np.newaxis]
-                if img.shape[2] == 1:
+                img_shape = img.shape
+                if img_shape[2] == 1:
                     # Extend to 3 channels for matplot figure
-                    img = np.reshape(np.repeat(img, 3, axis=2), newshape=(self._image_size[0], self._image_size[1], 3))
+                    img = np.reshape(np.repeat(img, 3, axis=2), newshape=(img_shape[0], img_shape[1], 3))
                 a[i].imshow(img)
 
             f.show()
