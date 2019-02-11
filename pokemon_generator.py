@@ -29,6 +29,12 @@ flags.DEFINE_integer(
 flags.DEFINE_integer(
     'noise_dims', 128, 'Dimensions of the generator noise vector.')
 
+flags.DEFINE_float(
+    'generator_learning_rate', 1e-3, 'Learning rate of the generator')
+
+flags.DEFINE_float(
+    'discriminator_learning_rate', 1e-4, 'Learning rate of the discriminator')
+
 FLAGS = flags.FLAGS
 
 
@@ -74,10 +80,6 @@ def unconditional_discriminator(img, weight_decay=2.5e-5):
 
     Args:
       img: Real or generated Pokemon. Should be in the range [-1, 1].
-      unused_conditioning: The TFGAN API can help with conditional GANs, which
-        would require extra `condition` information to both the generator and the
-        discriminator. Since this example is not conditional, we do not use this
-        argument.
       weight_decay: The L2 weight decay.
 
     Returns:
@@ -94,13 +96,6 @@ def unconditional_discriminator(img, weight_decay=2.5e-5):
         net = layers.fully_connected(net, 1024, normalizer_fn=layers.layer_norm)
 
     return layers.linear(net, 1)
-
-
-def _learning_rate(gan_type):
-    # First is generator learning rate, second is discriminator learning rate.
-    return {
-        'unconditional': (1e-3, 1e-4),
-    }[gan_type]
 
 
 def main(_):
@@ -138,12 +133,11 @@ def main(_):
 
     # Get the GANTrain ops using custom optimizers.
     with tf.name_scope('train'):
-        gen_lr, dis_lr = _learning_rate(FLAGS.gan_type)
         train_ops = tfgan.gan_train_ops(
             gan_model,
             gan_loss,
-            generator_optimizer=tf.train.AdamOptimizer(gen_lr, 0.5),
-            discriminator_optimizer=tf.train.AdamOptimizer(dis_lr, 0.5),
+            generator_optimizer=tf.train.AdamOptimizer(FLAGS.generator_learning_rate, 0.5),
+            discriminator_optimizer=tf.train.AdamOptimizer(FLAGS.discriminator_learning_rate, 0.5),
             summarize_gradients=True,
             aggregation_method=tf.AggregationMethod.EXPERIMENTAL_ACCUMULATE_N)
 
