@@ -31,13 +31,18 @@ _NUM_CHANNELS = 4
 _MAX_THREADS = 4
 _CLASS_NAMES = ["fake", "real"]
 
+def _rescale_image(image):
+    """
+    :param image: An integer based numpy array [0, 255]
+    :return: A numpy array [-1, 1]
+    """
+    return (image / 127.5) - 1.0
 
 def _extract_images(image_paths):
     """Extract the images into a numpy array.
 
     Args:
-      filename: The path to an MNIST images file.
-      num_images: The number of images in the file.
+      image_paths: The path to a directory containting the images
 
     Returns:
       A numpy array of shape [number_of_images, height, width, channels].
