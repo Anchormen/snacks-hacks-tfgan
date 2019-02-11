@@ -2,6 +2,8 @@
 
 @author: Jeroen Vlek <j.vlek@anchormen.nl>
 """
+import math
+
 import os
 
 import tensorflow as tf
@@ -35,7 +37,6 @@ class PlotGanImageHook(tf.train.SessionRunHook):
         session = run_context.session
         with tf.variable_scope('Generator', reuse=True):
             # Generate images from noise, using the generator network.
-            f, a = plt.subplots(1, 10, figsize=(10, 4))  # TODO make this configurable
             gen_output = session.run([self._gan_model.generated_data])
             gen_output = np.reshape(gen_output,
                                     (self._batch_size, self._image_size[0], self._image_size[1], -1))
@@ -43,15 +44,22 @@ class PlotGanImageHook(tf.train.SessionRunHook):
             # Rescale to [0, 1.0] and invert colors
             gen_output = 1.0 - (gen_output + 1.0) / 2.0
 
-            for i in range(10):
-                img = gen_output[i]
-                if self._image_size[2] == 1:
-                    # Extend grayscale to 3 channels for matplot figure
-                    img = np.reshape(np.repeat(img, 3, axis=2), newshape=(self._image_size[0], self._image_size[1], 3))
-                elif self._image_size[2] == 4:
-                    # Remove transparency layer in case of RGBA
-                    img = img[:, :, 0:3]
-                a[i].imshow(img)
+            grid_side = math.ceil(math.sqrt(self._batch_size))
+            f, a = plt.subplots(grid_side, grid_side, figsize=(20, 20))
+            for i in range(grid_side):
+                for j in range(grid_side):
+                    img_idx = i * grid_side + j
+                    if img_idx >= self._batch_size:
+                        break
+
+                    img = gen_output[img_idx]
+                    if self._image_size[2] == 1:
+                        # Extend grayscale to 3 channels for matplot figure
+                        img = np.reshape(np.repeat(img, 3, axis=2), newshape=(self._image_size[0], self._image_size[1], 3))
+                    elif self._image_size[2] == 4:
+                        # Remove transparency layer in case of RGBA
+                        img = img[:, :, 0:3]
+                    a[i][j].imshow(img)
 
             f.show()
             plt.draw()
