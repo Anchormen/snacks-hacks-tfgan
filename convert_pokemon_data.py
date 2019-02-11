@@ -38,6 +38,7 @@ def _rescale_image(image):
     """
     return (image / 127.5) - 1.0
 
+
 def _extract_images(image_paths):
     """Extract the images into a numpy array.
 
