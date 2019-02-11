@@ -29,7 +29,7 @@ flags.DEFINE_integer(
     'grid_size', 5, 'Grid size for image visualization.')
 
 flags.DEFINE_integer(
-    'noise_dims', 128, 'Dimensions of the generator noise vector.')
+    'noise_dims', 64, 'Dimensions of the generator noise vector.')
 
 flags.DEFINE_float(
     'generator_learning_rate', 1e-3, 'Learning rate of the generator')
@@ -68,13 +68,14 @@ def unconditional_generator(noise, weight_decay=2.5e-5, is_training=True):
         with tf.contrib.framework.arg_scope(
                 [layers.batch_norm], is_training=is_training):
             net = layers.fully_connected(noise, 1024)
-            net = layers.fully_connected(net, 7 * 7 * 128)
-            net = tf.reshape(net, [-1, 7, 7, 128])
+            net = layers.fully_connected(net, 8 * 8 * 128)
+            net = tf.reshape(net, [-1, 8, 8, 128])
             net = layers.conv2d_transpose(net, 64, [4, 4], stride=2)
             net = layers.conv2d_transpose(net, 32, [4, 4], stride=2)
             # ie [-1, 1].
             net = layers.conv2d(
-                net, 1, [4, 4], normalizer_fn=None, activation_fn=tf.tanh)
+                net, FLAGS.num_channels, [4, 4], normalizer_fn=None, activation_fn=tf.tanh)
+            print("net conv2d 4: " + str(net.get_shape()))
 
             return net
 
@@ -89,7 +90,6 @@ def unconditional_discriminator(img, weight_decay=2.5e-5):
     Returns:
       Logits for the probability that the image is real.
     """
-    print("Image: " + str(img.get_shape()))
     with tf.contrib.framework.arg_scope(
             [layers.conv2d, layers.fully_connected],
             activation_fn=_leaky_relu, normalizer_fn=None,
@@ -101,6 +101,7 @@ def unconditional_discriminator(img, weight_decay=2.5e-5):
         net = layers.fully_connected(net, 1024, normalizer_fn=layers.layer_norm)
 
     return layers.linear(net, 1)
+
 
 def _read_label_file(dataset_dir, filename="labels.txt"):
     """Reads the labels file and returns a mapping from ID to class name.
@@ -121,17 +122,18 @@ def _read_label_file(dataset_dir, filename="labels.txt"):
     labels_to_class_names = {}
     for line in lines:
         index = line.index(':')
-        labels_to_class_names[int(line[:index])] = line[index+1:]
+        labels_to_class_names[int(line[:index])] = line[index + 1:]
     return labels_to_class_names
 
 
-def load_dataset(dataset_dir, file_name, num_readers=2, num_threads=2):
+def _load_dataset(dataset_dir, file_name, num_readers=2, num_threads=2):
     """Gets a dataset tuple with instructions for reading Pokemon data.
 
     Args:
       dataset_dir: The base directory of the dataset sources.
       file_name:
-      num_readers
+      num_readers:
+      num_threads:
 
     Returns:
       A `Dataset` namedtuple.
@@ -151,7 +153,8 @@ def load_dataset(dataset_dir, file_name, num_readers=2, num_threads=2):
     }
 
     items_to_handlers = {
-        'image': slim.tfexample_decoder.Image(shape=[FLAGS.image_size, FLAGS.image_size, FLAGS.num_channels], channels=FLAGS.num_channels),
+        'image': slim.tfexample_decoder.Image(shape=[FLAGS.image_size, FLAGS.image_size, FLAGS.num_channels],
+                                              channels=FLAGS.num_channels),
         'label': slim.tfexample_decoder.Tensor('image/class/label', shape=[]),
     }
 
@@ -188,6 +191,10 @@ def load_dataset(dataset_dir, file_name, num_readers=2, num_threads=2):
     return images, one_hot_labels, dataset.num_samples
 
 
+def _rescale_images(images):
+    return (tf.to_float(images) - 128.0) / 128.0
+
+
 def main(_):
     if not tf.gfile.Exists(FLAGS.train_log_dir):
         tf.gfile.MakeDirs(FLAGS.train_log_dir)
@@ -196,7 +203,9 @@ def main(_):
     # the forward inference and back-propagation.
     with tf.name_scope('inputs'):
         with tf.device('/cpu:0'):
-            images, one_hot_labels, _ = load_dataset(FLAGS.dataset_dir, FLAGS.tfr_filename, num_readers=2, num_threads=2)
+            images, one_hot_labels, _ = _load_dataset(FLAGS.dataset_dir, FLAGS.tfr_filename, num_readers=2,
+                                                      num_threads=2)
+            images = _rescale_images(images)
 
     generator_fn = unconditional_generator
     noise_fn = tf.random_normal(
@@ -218,7 +227,7 @@ def main(_):
             gradient_penalty_weight=1.0,
             mutual_information_penalty_weight=0.0,
             add_summaries=True)
-        tfgan.eval.add_regularization_loss_summaries(gan_model)
+        # tfgan.eval.add_regularization_loss_summaries(gan_model)
 
     # Get the GANTrain ops using custom optimizers.
     with tf.name_scope('train'):
@@ -240,7 +249,8 @@ def main(_):
         return
 
     gan_plotter_hook = PlotGanImageHook(gan_model=gan_model, path=os.path.join(os.sep, "tmp", "gan_output"),
-                                        every_n_iter=100, batch_size=FLAGS.batch_size)
+                                        every_n_iter=100, batch_size=FLAGS.batch_size,
+                                        image_size=(FLAGS.image_size, FLAGS.image_size, FLAGS.num_channels))
 
     tfgan.gan_train(
         train_ops,
