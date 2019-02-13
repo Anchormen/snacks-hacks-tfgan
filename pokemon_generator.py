@@ -68,6 +68,7 @@ def unconditional_generator(noise, weight_decay=2.5e-5, is_training=True):
         with tf.contrib.framework.arg_scope(
                 [layers.batch_norm], is_training=is_training):
             net = layers.fully_connected(noise, 1024)
+            net = layers.fully_connected(net, 1024)
             net = layers.fully_connected(net, 8 * 8 * 128)
             net = tf.reshape(net, [-1, 8, 8, 128])
             net = layers.conv2d_transpose(net, 64, [4, 4], stride=2)
@@ -75,7 +76,6 @@ def unconditional_generator(noise, weight_decay=2.5e-5, is_training=True):
             # ie [-1, 1].
             net = layers.conv2d(
                 net, FLAGS.num_channels, [4, 4], normalizer_fn=None, activation_fn=tf.tanh)
-            print("net conv2d 4: " + str(net.get_shape()))
 
             return net
 
@@ -97,7 +97,9 @@ def unconditional_discriminator(img, weight_decay=2.5e-5):
             biases_regularizer=layers.l2_regularizer(weight_decay)):
         net = layers.conv2d(img, 64, [4, 4], stride=2)
         net = layers.conv2d(net, 128, [4, 4], stride=2)
+        net = layers.conv2d(net, 128, [4, 4], stride=2)
         net = layers.flatten(net)
+        net = layers.fully_connected(net, 1024, normalizer_fn=layers.layer_norm)
         net = layers.fully_connected(net, 1024, normalizer_fn=layers.layer_norm)
 
     return layers.linear(net, 1)
@@ -249,7 +251,7 @@ def main(_):
         return
 
     gan_plotter_hook = PlotGanImageHook(gan_model=gan_model, path=os.path.join(os.sep, "tmp", "gan_output"),
-                                        every_n_iter=100, batch_size=FLAGS.batch_size,
+                                        every_n_iter=500, batch_size=FLAGS.batch_size,
                                         image_size=(FLAGS.image_size, FLAGS.image_size, FLAGS.num_channels))
 
     tfgan.gan_train(
